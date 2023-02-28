@@ -1,0 +1,5 @@
+perception/grasp_detector
+/home/teamf/graspnet_ws/devel/.private/grasp_detector/cmake.lock /home/teamf/graspnet_ws/devel/./cmake.lock
+/home/teamf/graspnet_ws/devel/.private/grasp_detector/lib/pkgconfig/grasp_detector.pc /home/teamf/graspnet_ws/devel/lib/pkgconfig/grasp_detector.pc
+/home/teamf/graspnet_ws/devel/.private/grasp_detector/share/grasp_detector/cmake/grasp_detectorConfig-version.cmake /home/teamf/graspnet_ws/devel/share/grasp_detector/cmake/grasp_detectorConfig-version.cmake
+/home/teamf/graspnet_ws/devel/.private/grasp_detector/share/grasp_detector/cmake/grasp_detectorConfig.cmake /home/teamf/graspnet_ws/devel/share/grasp_detector/cmake/grasp_detectorConfig.cmake
