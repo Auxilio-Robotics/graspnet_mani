@@ -70,6 +70,9 @@ def get_and_process_data(data_dir):
     cloud_masked = cloud[mask]
     color_masked = color[mask]
 
+    print("max=",cloud_masked.max(axis=0))
+    print("min=",cloud_masked.min(axis=0))
+
 
     # sample points
     if len(cloud_masked) >= cfgs.num_point:
@@ -114,7 +117,9 @@ def vis_grasps(gg, cloud):
     gg.sort_by_score()
     gg = gg[:50]
     grippers = gg.to_open3d_geometry_list()
-    o3d.visualization.draw_geometries([cloud, *grippers])
+    # o3d.visualization.draw_geometries([cloud, *grippers])
+
+    o3d.visualization.draw_geometries([cloud])
 
 def demo(data_dir):
     net = get_net()
