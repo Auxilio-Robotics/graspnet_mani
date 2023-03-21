@@ -49,6 +49,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   grasp.msg
+  grasp_pose.msg
   # Message2.msg
 )
 

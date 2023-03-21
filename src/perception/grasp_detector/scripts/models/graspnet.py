@@ -82,6 +82,7 @@ def pred_decode(end_points):
         objectness_score = end_points['objectness_score'][i].float()
         grasp_score = end_points['grasp_score_pred'][i].float()
         grasp_center = end_points['fp2_xyz'][i].float()
+
         approaching = -end_points['grasp_top_view_xyz'][i].float()
         grasp_angle_class_score = end_points['grasp_angle_cls_pred'][i]
         grasp_width = 1.2 * end_points['grasp_width_pred'][i]

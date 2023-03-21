@@ -91,37 +91,50 @@ class GraspGenerator:
         self.color = self.color.astype(np.float64)/255.0
 
         #rotating image to shape (1280,720)
-        self.color = cv2.rotate(self.color,cv2.ROTATE_90_CLOCKWISE)
-        self.depth = cv2.rotate(self.depth,cv2.ROTATE_90_CLOCKWISE)
-        self.workspace_mask = cv2.rotate(self.workspace_mask,cv2.ROTATE_90_CLOCKWISE)
+        # self.color = cv2.rotate(self.color,cv2.ROTATE_90_CLOCKWISE)
+        # self.depth = cv2.rotate(self.depth,cv2.ROTATE_90_CLOCKWISE)
+        # self.workspace_mask = cv2.rotate(self.workspace_mask,cv2.ROTATE_90_CLOCKWISE)
 
+        print("Workspace mask shape=",self.workspace_mask.shape)
         self._print_shapes()
         #inflation radius around bounding box
-        inflate=25
-        idx= self.depth > self.grasp_args.max_depth
-        self.workspace_mask[self.bbox[1]-inflate:self.bbox[3]-inflate,self.bbox[0]-inflate:self.bbox[2]+inflate] = 255
-        self.workspace_mask[idx] = 0
-           
+        inflate=20
+        # idx= self.depth > self.grasp_args.max_depth
+
+        # self.workspace_mask[self.bbox[1]-inflate:self.bbox[3]-inflate,self.bbox[0]-inflate:self.bbox[2]+inflate] = 255
+
+        self.workspace_mask[self.bbox[0]-inflate:self.bbox[2]-inflate,self.bbox[1]-inflate:self.bbox[3]+inflate] = 255
+
+        
+        print(np.count_nonzero(self.workspace_mask))
+        # self.workspace_mask[:,:] = 255
+
+        # cv2.imshow('Image',self.color*np.reshape(self.workspace_mask,(1280,720,1))/255)
+        # cv2.waitKey(0)
+        # self.workspace_mask[idx] = 0
+        # self.workspace_mask[100:600,600:900] = 255
+        
         factor_depth = 1000
         camera = CameraInfo(self.color.shape[1], self.color.shape[0], self.intrinsic[0][0], self.intrinsic[1][1], self.intrinsic[0][2], self.intrinsic[1][2], factor_depth)
 
-        print("camera=",(camera.height,camera.width))
+        # print("camera=",(camera.height,camera.width))
         cloud = create_point_cloud_from_depth_image(self.depth, camera, organized=True) #shape=(480,640,3)
-        mask = (self.workspace_mask & (self.depth > 0)) #shape =(480,640)
+        mask = (self.workspace_mask & (self.depth > 0)) #shape =(720,1280)
       
         cloud_masked = cloud[mask>0,:]
         color_masked = self.color[mask>0,:]
 
-        print(cloud_masked)
+        # print("Centroid=",cloud_masked.mean(axis=0))
 
-        print("max=",cloud_masked.max(axis=0))
-        print("min=",cloud_masked.min(axis=0))
-        print("num_pts=",cloud_masked.shape)
+        # print("max=",cloud_masked.max(axis=0))
+        # print("min=",cloud_masked.min(axis=0))
+        # print("num_pts=",cloud_masked.shape)
 
         # sample points
         if len(cloud_masked) >= 20000:
             idxs = np.random.choice(len(cloud_masked), 20000, replace=False)
         else:
+            print("Cloud_masked shape",)
             idxs1 = np.arange(len(cloud_masked))
             idxs2 = np.random.choice(len(cloud_masked), 20000-len(cloud_masked), replace=True)
             idxs = np.concatenate([idxs1, idxs2], axis=0)
@@ -150,18 +163,28 @@ class GraspGenerator:
         gg_array = grasp_preds[0].detach().cpu().numpy()
         gg = GraspGroup(gg_array)
         return gg
+    
+    def get_centroid(self,end_points:dict):
+
+        pts = end_points["point_clouds"].to("cpu").detach().numpy()
+        pts=pts.squeeze(axis=0)
+        return np.mean(pts,axis=0)
+
 
     def collision_detection(self,gg, cloud):
         mfcdetector = ModelFreeCollisionDetector(cloud, voxel_size=0.01)
         collision_mask = mfcdetector.detect(gg, approach_dist=0.05, collision_thresh=0.01)
         gg = gg[~collision_mask]
         return gg
-
-    def vis_grasps(self,gg, cloud):
+    
+    def sort_grasps(self,gg):
         gg.nms()
         gg.sort_by_score()
         #get best 50 grasps
-        gg = gg[:50]
+        gg = gg[:1]
+
+    def vis_grasps(self,gg, cloud):
+        gg = self.sort_grasps(gg)
         grippers = gg.to_open3d_geometry_list()
         o3d.visualization.draw_geometries([cloud, *grippers])
 
@@ -179,5 +202,20 @@ def demo(color=None,depth=None,bbox=None,intrinsics=None,vis_flag=False):
 
     if(vis_flag):
         grasp_obj.vis_grasps(gg, cloud)
+
+    else:
+        gg = grasp_obj.sort_grasps(gg)
+    
     return gg
 
+def centroid_grasp(color=None,depth=None,bbox=None,intrinsics=None,vis_flag=False):
+
+    #runs inference on images and return grasp poses
+    grasp_args = GraspArgs()
+    grasp_obj = GraspGenerator(grasp_args,color=color,depth=depth,bbox=bbox,intrinsics=intrinsics)
+
+    end_points, cloud = grasp_obj.get_and_process_data()
+    centroid = grasp_obj.get_centroid(end_points)
+    print("centroid=",centroid)
+
+    return centroid
