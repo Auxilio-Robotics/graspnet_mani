@@ -1,7 +1,8 @@
 
 # set path to grasp detector. go to configs and install requirements.txt
-
-# go to scripts
+cd $(pwd)/config/
+pip install -r requirements.txt
+cd ..
 
 cd pointnet2
 python setup.py install
@@ -11,4 +12,6 @@ python setup.py install
 
 cd ../graspnetAPI
 pip install .
+
+
 
