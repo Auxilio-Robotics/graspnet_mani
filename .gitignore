@@ -1,3 +1,4 @@
 build/
 devel/
 logs/
+/home/teamf/graspnet_ws/src/perception/grasp_detector/scripts/__pycache__
